@@ -204,3 +204,6 @@ for i in range(len(analyse)):
 print(analyse)
 print(würfe)
 print(decisions)
+
+def simulation(game_setup,number_of_games_to_simulate):
+    pass
