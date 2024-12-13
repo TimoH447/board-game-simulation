@@ -6,9 +6,10 @@ game_setup = {
     #list with a position number for each player, position 0 is the player to start, position 1 is the next corner and so on.
     "player_positions": [0,1,2,3], 
     #list of strategies for each player, ("random","first","last")
-    "strategies": ["first","last","random","random"]
+    "strategies": ["first","last","last","first"]
 }
 
-number_of_games_to_simulate = 100
+number_of_games_to_simulate = 1000
 
-statistics = simulation(game_setup, number_of_games_to_simulate)
+statistics = simulation(number_of_games_to_simulate=number_of_games_to_simulate,
+                        **game_setup)

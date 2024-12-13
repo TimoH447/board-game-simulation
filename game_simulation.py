@@ -2,9 +2,9 @@ import random
 import time
 
 class Spieler(object):
-    def __init__(self, spieler,start=0, wurfanzahl=0,entscheidungen=0, haus=4, ziel=0, feld=[], zielfeld=[], taktik="random"):
-        self.Spieler = spieler
-        self.Start = start + 10*spieler
+    def __init__(self, position,start=0, wurfanzahl=0,entscheidungen=0, haus=4, ziel=0, feld=[], zielfeld=[], taktik="random"):
+        self.Position = position
+        self.Start = start + 10*position
         self.Wurfanzahl = wurfanzahl
         self.Entscheidungen = entscheidungen
         self.Haus = haus
@@ -151,59 +151,58 @@ def spielzug(spielzug_spielerliste, spielzug_spieler, a):
         return
 
 
-print('Start')
 #######################
 #    Spieler 0 = Schwarz
 #    Spieler 1 = Gelb
 #    Spieler 2 = Grün
 #    Spieler 3 = Rot
 ######################
-n = 4#int(input("Wie viele spielen mit?"))
 
-x={"schwarz": Spieler(0, taktik="first"), "gelb": Spieler(1), "grün": Spieler(2,taktik="first"), "rot": Spieler(3)}
-spielerliste=[x["schwarz"], x["gelb"],x["grün"],x["rot"]]
 
-"""for global_i in range(n):
-    print("Welche Farben möchte Spieler", global_i+1,"?")
-    spielerliste.append(x[input()])"""
-würfe=[0]*n
-analyse=[0]*n
-decisions=[0]*n
-spieldurchläufe=100
 
-gesamtzeit=time.time()
-for stichprobe in range(spieldurchläufe):
-    ende=0
-    #zeit=time.time()
-    #Ein Spieldurchgang (bricht nachdem jeder Spieler 500 Züge hatte automatisch ab)
-    while ende<500:
+
+
+def simulation(number_of_games_to_simulate, number_of_players, player_positions, strategies):
+    players=[]
+    for i in range(number_of_players):
+        players.append(Spieler(position=player_positions[i],taktik=strategies[i]))
+    spielerliste=sorted(players, key= lambda x: x.Position)
+    print(spielerliste[1].Position)
+
+    würfe=[0]*number_of_players
+    analyse=[0]*number_of_players
+    decisions=[0]*number_of_players
+
+    gesamtzeit=time.time()
+    for stichprobe in range(number_of_games_to_simulate):
+        ende=0
+        #zeit=time.time()
+        #Ein Spieldurchgang (bricht nachdem jeder Spieler 500 Züge hatte automatisch ab)
+        while ende<500:
+            
+            #jeder Spieler macht einen zug
+            for aktiver_spieler in range(number_of_players):
+                spielzug(spielerliste, aktiver_spieler,0)
+                if spielerliste[aktiver_spieler].Ziel == 4:
+                    decisions[aktiver_spieler]=decisions[aktiver_spieler]+ spielerliste[aktiver_spieler].Entscheidungen
+                    analyse[aktiver_spieler] = analyse[aktiver_spieler]+1
+                    würfe[aktiver_spieler]=würfe[aktiver_spieler]+spielerliste[aktiver_spieler].Wurfanzahl
+                    break
+            else:
+                ende=ende+1
+                continue
+            break
+        for beendetes_spiel in range(number_of_players):
+            spielerliste[beendetes_spiel].reset()
+
+    print("Spieler:", number_of_players, "Spiele:", number_of_games_to_simulate)
+    print('Dauer der Simulation in Sekunden: ', time.time()-gesamtzeit)
+
+    for i in range(len(analyse)):
+        decisions[i]=decisions[i]/analyse[i]
+        würfe[i]=würfe[i]/analyse[i]
+        analyse[i]=analyse[i]/number_of_games_to_simulate
         
-        #jeder Spieler macht einen zug
-        for aktiver_spieler in range(n):
-            spielzug(spielerliste, aktiver_spieler,0)
-            if spielerliste[aktiver_spieler].Ziel == 4:
-                decisions[aktiver_spieler]=decisions[aktiver_spieler]+ spielerliste[aktiver_spieler].Entscheidungen
-                analyse[aktiver_spieler] = analyse[aktiver_spieler]+1
-                würfe[aktiver_spieler]=würfe[aktiver_spieler]+spielerliste[aktiver_spieler].Wurfanzahl
-                break
-        else:
-            ende=ende+1
-            continue
-        break
-    for beendetes_spiel in range(n):
-        spielerliste[beendetes_spiel].reset()
-
-print("Spieler:", n, "Spiele:", spieldurchläufe)
-print('Dauer der Simulation in Sekunden: ', time.time()-gesamtzeit)
-
-for i in range(len(analyse)):
-    decisions[i]=decisions[i]/analyse[i]
-    würfe[i]=würfe[i]/analyse[i]
-    analyse[i]=analyse[i]/spieldurchläufe
-    
-print(analyse)
-print(würfe)
-print(decisions)
-
-def simulation(game_setup,number_of_games_to_simulate):
-    pass
+    print(analyse)
+    print(würfe)
+    print(decisions)
