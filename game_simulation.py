@@ -150,13 +150,22 @@ def spielzug(spielzug_spielerliste, spielzug_spieler, a):
     else:
         return
 
+"""
+This function prints a summary of the simulation to the console.
+"""
+def summerize_results(number_of_games_to_simulate, number_of_players, player_positions, strategies, results):
+    print("//////////// SIMULATION OVERVIEW /////////////////////////////////////////////////\n")
+    print("Number of players:", number_of_players, "Number of games simulated:", number_of_games_to_simulate, "\n")
+    for i in range(number_of_players):
+        print(f"Player {i} - Board position: {player_positions[i]}, Strategy: {strategies[i]}")
+    print("\n//////////// SIMULATION RESULTS //////////////////////////////////////////////////\n")
 
-#######################
-#    Spieler 0 = Schwarz
-#    Spieler 1 = Gelb
-#    Spieler 2 = Grün
-#    Spieler 3 = Rot
-######################
+    print(f"Duration of simulation in seconds: {results["overall_simulation_time"]}\n")
+    for i in range(number_of_players):
+        print(f"Player {i} - Number of wins: {results["number_of_wins"][i]}, Win percentage: {results["number_of_wins"][i]/number_of_games_to_simulate}")
+
+    print("\n//////////////////////////////////////////////////////////////////////////////////")
+
 
 
 
@@ -167,10 +176,9 @@ def simulation(number_of_games_to_simulate, number_of_players, player_positions,
     for i in range(number_of_players):
         players.append(Spieler(position=player_positions[i],taktik=strategies[i]))
     spielerliste=sorted(players, key= lambda x: x.Position)
-    print(spielerliste[1].Position)
 
     würfe=[0]*number_of_players
-    analyse=[0]*number_of_players
+    number_of_wins=[0]*number_of_players
     decisions=[0]*number_of_players
 
     gesamtzeit=time.time()
@@ -183,26 +191,33 @@ def simulation(number_of_games_to_simulate, number_of_players, player_positions,
             #jeder Spieler macht einen zug
             for aktiver_spieler in range(number_of_players):
                 spielzug(spielerliste, aktiver_spieler,0)
+
+                # Check if player has won 
                 if spielerliste[aktiver_spieler].Ziel == 4:
                     decisions[aktiver_spieler]=decisions[aktiver_spieler]+ spielerliste[aktiver_spieler].Entscheidungen
-                    analyse[aktiver_spieler] = analyse[aktiver_spieler]+1
+                    number_of_wins[aktiver_spieler] = number_of_wins[aktiver_spieler]+1
                     würfe[aktiver_spieler]=würfe[aktiver_spieler]+spielerliste[aktiver_spieler].Wurfanzahl
                     break
             else:
                 ende=ende+1
                 continue
             break
+
+        # reset all players for the next game
         for beendetes_spiel in range(number_of_players):
             spielerliste[beendetes_spiel].reset()
 
-    print("Spieler:", number_of_players, "Spiele:", number_of_games_to_simulate)
-    print('Dauer der Simulation in Sekunden: ', time.time()-gesamtzeit)
+    overall_simulation_time = time.time()-gesamtzeit
 
-    for i in range(len(analyse)):
-        decisions[i]=decisions[i]/analyse[i]
-        würfe[i]=würfe[i]/analyse[i]
-        analyse[i]=analyse[i]/number_of_games_to_simulate
-        
-    print(analyse)
-    print(würfe)
-    print(decisions)
+    for i in range(len(number_of_wins)):
+        #decisions[i]=decisions[i]/analyse[i] average number of decisions taken in won games
+        #würfe[i]=würfe[i]/analyse[i]
+        pass
+
+    results = {
+        "overall_simulation_time": overall_simulation_time,
+        "number_of_dice_rolls": würfe,
+        "number_of_decisions": decisions,
+        "number_of_wins": number_of_wins,
+    }
+    summerize_results(number_of_games_to_simulate, number_of_players, player_positions, strategies, results)
