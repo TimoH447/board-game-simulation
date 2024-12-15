@@ -109,6 +109,22 @@ def schlagen(schlagen_position, schlagen_spielerliste):
     return
 
 def spielzug(spielzug_spielerliste, spielzug_spieler, a):
+    """
+    Executes a single turn (spielzug) for a player in the game.
+
+    This function simulates a player's turn, rolling a dice and determining 
+    the next move based on the result. If a player rolls a 6, special rules apply, 
+    such as placing a new piece on the board. The function handles multiple attempts 
+    (up to 3) in case the player cannot make a move.
+
+    Args:
+        spielzug_spielerliste (list): A list of all players (Spieler objects).
+        spielzug_spieler (int): Index of the active player in spielzug_spielerliste.
+        a (int): The number of attempts already made in this turn (used to limit retries).
+
+    Returns:
+        None: The function updates the game state in-place.
+    """
     #Nach dem dritten Versuch ist Schluss
     if a>2:
         return
@@ -150,10 +166,21 @@ def spielzug(spielzug_spielerliste, spielzug_spieler, a):
     else:
         return
 
-"""
-This function prints a summary of the simulation to the console.
-"""
 def summerize_results(number_of_games_to_simulate, number_of_players, player_positions, strategies, results):
+    """
+    Prints a summary of the simulation to the console.
+
+    Args:
+        number_of_games_to_simulate (int): Number of games to simulate.
+        number_of_players (int): Number of players in the game.
+        player_positions (list): Starting positions for players.
+        strategies (list): List of strategies for each player.
+        result (dictionary): Results and statistics from the simulation.
+
+    Returns:
+        None
+    """
+
     print("//////////// SIMULATION OVERVIEW /////////////////////////////////////////////////\n")
     print("Number of players:", number_of_players, "Number of games simulated:", number_of_games_to_simulate, "\n")
     for i in range(number_of_players):
@@ -163,7 +190,6 @@ def summerize_results(number_of_games_to_simulate, number_of_players, player_pos
     print(f"Duration of simulation in seconds: {results["overall_simulation_time"]}\n")
     for i in range(number_of_players):
         print(f"Player {i} - Number of wins: {results["number_of_wins"][i]}, Win percentage: {results["number_of_wins"][i]/number_of_games_to_simulate}")
-
     print("\n//////////////////////////////////////////////////////////////////////////////////")
 
 
@@ -172,6 +198,19 @@ def summerize_results(number_of_games_to_simulate, number_of_players, player_pos
 
 
 def simulation(number_of_games_to_simulate, number_of_players, player_positions, strategies):
+    """
+    Simulates multiple games of a board game.
+
+    Args:
+        number_of_games_to_simulate (int): Number of games to simulate.
+        number_of_players (int): Number of players in the game.
+        player_positions (list): Starting positions for players.
+        strategies (list): List of strategies for each player.
+
+    Returns:
+        None
+    """
+
     players=[]
     for i in range(number_of_players):
         players.append(Spieler(position=player_positions[i],taktik=strategies[i]))
@@ -198,9 +237,11 @@ def simulation(number_of_games_to_simulate, number_of_players, player_positions,
                     number_of_wins[aktiver_spieler] = number_of_wins[aktiver_spieler]+1
                     würfe[aktiver_spieler]=würfe[aktiver_spieler]+spielerliste[aktiver_spieler].Wurfanzahl
                     break
-            else:
+            else: # never saw an else statement after foor loop
+                # The else clause executes after the loop completes normally. 
+                # This means that the loop did not encounter a break statement.
                 ende=ende+1
-                continue
+                continue # jump to start of the while loop 
             break
 
         # reset all players for the next game
