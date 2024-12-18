@@ -1,6 +1,59 @@
 import random
 import time
 
+class Game:
+    def __init__(self, number_of_players, players, max_turns = 500):
+        self.number_of_players = number_of_players
+        self.players = players
+        self.current_turn =0# index of the current player
+        self.max_turns = max_turns
+        self.turn_counter = 0
+
+        self.winner = None
+
+    def reset_game(self):
+        # reset all players for the next game
+        for beendetes_spiel in range(self.number_of_players):
+            self.players[beendetes_spiel].reset()
+        self.winner=None
+        self.turn_counter=0
+        self.current_turn=0
+        
+
+    def start_game(self):
+        self.reset_game()
+
+        #Ein Spieldurchgang (bricht nachdem jeder Spieler 500 Züge hatte automatisch ab)
+        while self.turn_counter<500:
+            
+            #jeder Spieler macht einen zug
+            for aktiver_spieler in range(self.number_of_players):
+                spielzug(self.players, aktiver_spieler,0)
+
+                # Check if player has won 
+                if self.players[aktiver_spieler].Ziel == 4:
+                    #decisions[aktiver_spieler]=decisions[aktiver_spieler]+ spielerliste[aktiver_spieler].Entscheidungen
+                    #number_of_wins[aktiver_spieler] = number_of_wins[aktiver_spieler]+1
+                    #würfe[aktiver_spieler]=würfe[aktiver_spieler]+spielerliste[aktiver_spieler].Wurfanzahl
+                    self.winner = aktiver_spieler
+                    break
+            else: # never saw an else statement after foor loop
+                # The else clause executes after the loop completes normally. 
+                # This means that the loop did not encounter a break statement.
+                self.turn_counter += 1
+                continue # jump to start of the while loop 
+            break
+    
+    def get_winner(self):
+        return self.winner
+
+    def play_turn(self):
+        pass
+    def check_winner(self):
+        pass
+    def end_game(self):
+        pass
+
 class Spieler(object):
     def __init__(self, position,start=0, wurfanzahl=0,entscheidungen=0, haus=4, ziel=0, feld=[], zielfeld=[], taktik="random"):
         self.Position = position
@@ -193,10 +246,6 @@ def summerize_results(number_of_games_to_simulate, number_of_players, player_pos
     print("\n//////////////////////////////////////////////////////////////////////////////////")
 
 
-
-
-
-
 def simulation(number_of_games_to_simulate, number_of_players, player_positions, strategies):
     """
     Simulates multiple games of a board game.
@@ -214,7 +263,9 @@ def simulation(number_of_games_to_simulate, number_of_players, player_positions,
     players=[]
     for i in range(number_of_players):
         players.append(Spieler(position=player_positions[i],taktik=strategies[i]))
-    spielerliste=sorted(players, key= lambda x: x.Position)
+    players=sorted(players, key= lambda x: x.Position)
+
+    game = Game(number_of_players, players)
 
     würfe=[0]*number_of_players
     number_of_wins=[0]*number_of_players
@@ -222,38 +273,14 @@ def simulation(number_of_games_to_simulate, number_of_players, player_positions,
 
     gesamtzeit=time.time()
     for stichprobe in range(number_of_games_to_simulate):
-        ende=0
-        #zeit=time.time()
-        #Ein Spieldurchgang (bricht nachdem jeder Spieler 500 Züge hatte automatisch ab)
-        while ende<500:
-            
-            #jeder Spieler macht einen zug
-            for aktiver_spieler in range(number_of_players):
-                spielzug(spielerliste, aktiver_spieler,0)
+        game.start_game()
+        winner = game.get_winner()
+        if winner is not None:
+            number_of_wins[winner]+=1
+            würfe[winner]=würfe[winner]+game.turn_counter
 
-                # Check if player has won 
-                if spielerliste[aktiver_spieler].Ziel == 4:
-                    decisions[aktiver_spieler]=decisions[aktiver_spieler]+ spielerliste[aktiver_spieler].Entscheidungen
-                    number_of_wins[aktiver_spieler] = number_of_wins[aktiver_spieler]+1
-                    würfe[aktiver_spieler]=würfe[aktiver_spieler]+spielerliste[aktiver_spieler].Wurfanzahl
-                    break
-            else: # never saw an else statement after foor loop
-                # The else clause executes after the loop completes normally. 
-                # This means that the loop did not encounter a break statement.
-                ende=ende+1
-                continue # jump to start of the while loop 
-            break
-
-        # reset all players for the next game
-        for beendetes_spiel in range(number_of_players):
-            spielerliste[beendetes_spiel].reset()
-
+        
     overall_simulation_time = time.time()-gesamtzeit
-
-    for i in range(len(number_of_wins)):
-        #decisions[i]=decisions[i]/analyse[i] average number of decisions taken in won games
-        #würfe[i]=würfe[i]/analyse[i]
-        pass
 
     results = {
         "overall_simulation_time": overall_simulation_time,
