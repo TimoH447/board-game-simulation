@@ -28,7 +28,8 @@ class Game:
             
             #jeder Spieler macht einen zug
             for aktiver_spieler in range(self.number_of_players):
-                spielzug(self.players, aktiver_spieler,0)
+                self.current_turn = aktiver_spieler
+                self.play_turn(0)
 
                 # Check if player has won 
                 if self.players[aktiver_spieler].Ziel == 4:
@@ -47,8 +48,65 @@ class Game:
     def get_winner(self):
         return self.winner
 
-    def play_turn(self):
-        pass
+    def play_turn(self,a):
+        """
+        Executes a single turn (spielzug) for a player in the game.
+
+        This function simulates a player's turn, rolling a dice and determining 
+        the next move based on the result. If a player rolls a 6, special rules apply, 
+        such as placing a new piece on the board. The function handles multiple attempts 
+        (up to 3) in case the player cannot make a move.
+
+        Args:
+            spielzug_spielerliste (list): A list of all players (Spieler objects).
+            spielzug_spieler (int): Index of the active player in spielzug_spielerliste.
+            a (int): The number of attempts already made in this turn (used to limit retries).
+
+        Returns:
+            None: The function updates the game state in-place.
+        """
+        #Nach dem dritten Versuch ist Schluss
+        if a>2:
+            return
+        #Variablen
+        ich=self.players[self.current_turn]
+        #Die gewüfelte Zahl
+        w =ich.wurf()
+        ich.Wurfanzahl = ich.Wurfanzahl +1
+        #Wurde eine 6 gewürfelt?
+        if w==6:
+            #Ist noch eine Figur im Haus?
+            if ich.Haus != 0:
+                if not ich.Start in ich.Feld:
+                    schlagen(ich.Start,self.players)
+                    ich.Feld.append(ich.Start)
+                    ich.Haus=ich.Haus-1
+                    self.play_turn(a)
+                else:
+                    ausgewählte_figur = figurauswahl(self.players, self.current_turn, w)
+                    if ausgewählte_figur<len(ich.Feld):
+                        schlagen(ich.Feld[ausgewählte_figur]+w,self.players)
+                        ich.bewegen(ausgewählte_figur, w)
+                    self.play_turn(a)
+            else:
+                ausgewählte_figur = figurauswahl(self.players, self.current_turn, w)
+                if ausgewählte_figur<len(ich.Feld):
+                    schlagen(ich.Feld[ausgewählte_figur]+w,self.players)
+                    ich.bewegen(ausgewählte_figur, w)
+                self.play_turn(a)
+
+                
+        elif len(ich.Feld)>0:   #die erste Figur auf dem Feld weiterbewegen (es wurde keine 6 gewürfelt) 
+            ausgewählte_figur = figurauswahl(self.players, self.current_turn, w)
+            if ausgewählte_figur<len(ich.Feld):
+                schlagen(ich.Feld[ausgewählte_figur]+w,self.players)
+                ich.bewegen(ausgewählte_figur, w)
+            return
+        elif ich.Haus + ich.Ziel==4:  #3 Freiversuche falls alle im Haus sind, abgesehen von denen die im Ziel  sind
+            self.play_turn(a+1)
+        else:
+            return
+
     def check_winner(self):
         pass
     def end_game(self):
@@ -160,64 +218,6 @@ def schlagen(schlagen_position, schlagen_spielerliste):
             schlagen_spieler.Feld.remove(schlagen_position-40)
             schlagen_spieler.Haus=schlagen_spieler.Haus +1
     return
-
-def spielzug(spielzug_spielerliste, spielzug_spieler, a):
-    """
-    Executes a single turn (spielzug) for a player in the game.
-
-    This function simulates a player's turn, rolling a dice and determining 
-    the next move based on the result. If a player rolls a 6, special rules apply, 
-    such as placing a new piece on the board. The function handles multiple attempts 
-    (up to 3) in case the player cannot make a move.
-
-    Args:
-        spielzug_spielerliste (list): A list of all players (Spieler objects).
-        spielzug_spieler (int): Index of the active player in spielzug_spielerliste.
-        a (int): The number of attempts already made in this turn (used to limit retries).
-
-    Returns:
-        None: The function updates the game state in-place.
-    """
-    #Nach dem dritten Versuch ist Schluss
-    if a>2:
-        return
-    #Variablen
-    ich=spielzug_spielerliste[spielzug_spieler]
-    #Die gewüfelte Zahl
-    w =ich.wurf()
-    ich.Wurfanzahl = ich.Wurfanzahl +1
-    #Wurde eine 6 gewürfelt?
-    if w==6:
-        #Ist noch eine Figur im Haus?
-        if ich.Haus != 0:
-            if not ich.Start in ich.Feld:
-                schlagen(ich.Start,spielzug_spielerliste)
-                ich.Feld.append(ich.Start)
-                ich.Haus=ich.Haus-1
-                spielzug(spielzug_spielerliste, spielzug_spieler, a)
-            else:
-                ausgewählte_figur = figurauswahl(spielzug_spielerliste, spielzug_spieler, w)
-                if ausgewählte_figur<len(ich.Feld):
-                    schlagen(ich.Feld[ausgewählte_figur]+w,spielzug_spielerliste)
-                    ich.bewegen(ausgewählte_figur, w)
-                spielzug(spielzug_spielerliste, spielzug_spieler, a)
-        else:
-            ausgewählte_figur = figurauswahl(spielzug_spielerliste, spielzug_spieler, w)
-            if ausgewählte_figur<len(ich.Feld):
-                schlagen(ich.Feld[ausgewählte_figur]+w,spielzug_spielerliste)
-                ich.bewegen(ausgewählte_figur, w)
-            spielzug(spielzug_spielerliste, spielzug_spieler, a)
-            
-    elif len(ich.Feld)>0:   #die erste Figur auf dem Feld weiterbewegen (es wurde keine 6 gewürfelt) 
-        ausgewählte_figur = figurauswahl(spielzug_spielerliste, spielzug_spieler, w)
-        if ausgewählte_figur<len(ich.Feld):
-            schlagen(ich.Feld[ausgewählte_figur]+w,spielzug_spielerliste)
-            ich.bewegen(ausgewählte_figur, w)
-        return
-    elif ich.Haus + ich.Ziel==4:  #3 Freiversuche falls alle im Haus sind
-        spielzug(spielzug_spielerliste, spielzug_spieler, a+1)
-    else:
-        return
 
 def summerize_results(number_of_games_to_simulate, number_of_players, player_positions, strategies, results):
     """

@@ -6,7 +6,7 @@ game_setup = {
     #list with a position number for each player, position 0 is the player to start, position 1 is the next corner and so on.
     "player_positions": [0,1,2,3], 
     #list of strategies for each player, ("random","first","last")
-    "strategies": ["first","first","first","first"]
+    "strategies": ["last","first","first","first"]
 }
 
 number_of_games_to_simulate = 1000
