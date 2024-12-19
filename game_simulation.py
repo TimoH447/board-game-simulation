@@ -1,6 +1,47 @@
 import random
 import time
 
+
+class Spieler(object):
+    def __init__(self, position,start=0, wurfanzahl=0,entscheidungen=0, haus=4, ziel=0, feld=[], zielfeld=[], taktik="random"):
+        self.Position = position
+        self.Start = start + 10*position
+        self.Wurfanzahl = wurfanzahl
+        self.Entscheidungen = entscheidungen
+        self.Haus = haus
+        self.Ziel = ziel
+        self.Feld = feld.copy()
+        self.Zielfeld = zielfeld.copy()
+        self.Taktik = taktik
+    def wurf(self):
+        augen = random.randint(1,6)
+        #print(augen)
+        return augen
+
+    def bewegen(self, bewegen_figur, bewegen_distanz): #Bewege die Figur falls die Zielposition nicht belegt ist
+        if bewegen_figur < len(self.Feld):
+            
+            aktuelle_position = self.Feld[bewegen_figur]
+            zielposition=aktuelle_position + bewegen_distanz
+        
+            if zielposition >= self.Start +40:
+                if zielposition<self.Start + 44:
+                    if not zielposition in self.Zielfeld:
+                        self.Zielfeld.append(zielposition)
+                        self.Feld.remove(aktuelle_position)
+                        self.Ziel=self.Ziel +1
+            else:
+                self.Feld[bewegen_figur] = zielposition
+        return
+  
+    def reset(self):
+        self.Haus=4
+        self.Feld=[]
+        self.Zielfeld=[]
+        self.Ziel=0
+        self.Wurfanzahl=0
+        self.Entscheidungen=0
+
 class Game:
     def __init__(self, number_of_players, players, max_turns = 500):
         self.number_of_players = number_of_players
@@ -48,7 +89,7 @@ class Game:
     def get_winner(self):
         return self.winner
 
-    def play_turn(self,a):
+    def play_turn(self,attempt):
         """
         Executes a single turn (spielzug) for a player in the game.
 
@@ -66,44 +107,44 @@ class Game:
             None: The function updates the game state in-place.
         """
         #Nach dem dritten Versuch ist Schluss
-        if a>2:
+        if attempt>2:
             return
         #Variablen
-        ich=self.players[self.current_turn]
+        player=self.players[self.current_turn]
         #Die gewüfelte Zahl
-        w =ich.wurf()
-        ich.Wurfanzahl = ich.Wurfanzahl +1
+        dice_roll = player.wurf()
+        player.Wurfanzahl = player.Wurfanzahl +1
         #Wurde eine 6 gewürfelt?
-        if w==6:
+        if dice_roll==6:
             #Ist noch eine Figur im Haus?
-            if ich.Haus != 0:
-                if not ich.Start in ich.Feld:
-                    schlagen(ich.Start,self.players)
-                    ich.Feld.append(ich.Start)
-                    ich.Haus=ich.Haus-1
-                    self.play_turn(a)
+            if player.Haus != 0:
+                if not player.Start in player.Feld:
+                    schlagen(player.Start,self.players)
+                    player.Feld.append(player.Start)
+                    player.Haus=player.Haus-1
+                    self.play_turn(attempt)
                 else:
-                    ausgewählte_figur = figurauswahl(self.players, self.current_turn, w)
-                    if ausgewählte_figur<len(ich.Feld):
-                        schlagen(ich.Feld[ausgewählte_figur]+w,self.players)
-                        ich.bewegen(ausgewählte_figur, w)
-                    self.play_turn(a)
+                    ausgewählte_figur = figurauswahl(self.players, self.current_turn, dice_roll)
+                    if ausgewählte_figur<len(player.Feld):
+                        schlagen(player.Feld[ausgewählte_figur]+dice_roll,self.players)
+                        player.bewegen(ausgewählte_figur, dice_roll)
+                    self.play_turn(attempt)
             else:
-                ausgewählte_figur = figurauswahl(self.players, self.current_turn, w)
-                if ausgewählte_figur<len(ich.Feld):
-                    schlagen(ich.Feld[ausgewählte_figur]+w,self.players)
-                    ich.bewegen(ausgewählte_figur, w)
-                self.play_turn(a)
+                ausgewählte_figur = figurauswahl(self.players, self.current_turn, dice_roll)
+                if ausgewählte_figur<len(player.Feld):
+                    schlagen(player.Feld[ausgewählte_figur]+dice_roll,self.players)
+                    player.bewegen(ausgewählte_figur, dice_roll)
+                self.play_turn(attempt)
 
                 
-        elif len(ich.Feld)>0:   #die erste Figur auf dem Feld weiterbewegen (es wurde keine 6 gewürfelt) 
-            ausgewählte_figur = figurauswahl(self.players, self.current_turn, w)
-            if ausgewählte_figur<len(ich.Feld):
-                schlagen(ich.Feld[ausgewählte_figur]+w,self.players)
-                ich.bewegen(ausgewählte_figur, w)
+        elif len(player.Feld)>0:   #die erste Figur auf dem Feld weiterbewegen (es wurde keine 6 gewürfelt) 
+            ausgewählte_figur = figurauswahl(self.players, self.current_turn, dice_roll)
+            if ausgewählte_figur<len(player.Feld):
+                schlagen(player.Feld[ausgewählte_figur]+dice_roll,self.players)
+                player.bewegen(ausgewählte_figur, dice_roll)
             return
-        elif ich.Haus + ich.Ziel==4:  #3 Freiversuche falls alle im Haus sind, abgesehen von denen die im Ziel  sind
-            self.play_turn(a+1)
+        elif player.Haus + player.Ziel==4:  #3 Freiversuche falls alle im Haus sind, abgesehen von denen die im Ziel  sind
+            self.play_turn(attempt+1)
         else:
             return
 
@@ -111,46 +152,6 @@ class Game:
         pass
     def end_game(self):
         pass
-
-class Spieler(object):
-    def __init__(self, position,start=0, wurfanzahl=0,entscheidungen=0, haus=4, ziel=0, feld=[], zielfeld=[], taktik="random"):
-        self.Position = position
-        self.Start = start + 10*position
-        self.Wurfanzahl = wurfanzahl
-        self.Entscheidungen = entscheidungen
-        self.Haus = haus
-        self.Ziel = ziel
-        self.Feld = feld.copy()
-        self.Zielfeld = zielfeld.copy()
-        self.Taktik = taktik
-    def wurf(self):
-        augen = random.randint(1,6)
-        #print(augen)
-        return augen
-
-    def bewegen(self, bewegen_figur, bewegen_distanz): #Bewege die Figur falls die Zielposition nicht belegt ist
-        if bewegen_figur < len(self.Feld):
-            
-            aktuelle_position = self.Feld[bewegen_figur]
-            zielposition=aktuelle_position + bewegen_distanz
-        
-            if zielposition >= self.Start +40:
-                if zielposition<self.Start + 44:
-                    if not zielposition in self.Zielfeld:
-                        self.Zielfeld.append(zielposition)
-                        self.Feld.remove(aktuelle_position)
-                        self.Ziel=self.Ziel +1
-            else:
-                self.Feld[bewegen_figur] = zielposition
-        return
-  
-    def reset(self):
-        self.Haus=4
-        self.Feld=[]
-        self.Zielfeld=[]
-        self.Ziel=0
-        self.Wurfanzahl=0
-        self.Entscheidungen=0
 
 def figurauswahl(f_spielerliste, f_spieler, f_distanz):
     ego = f_spielerliste[f_spieler]
