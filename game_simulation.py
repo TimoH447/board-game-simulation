@@ -1,7 +1,6 @@
 import random
 import time
 
-
 class Spieler(object):
     def __init__(self, position,start=0, wurfanzahl=0,entscheidungen=0, haus=4, ziel=0, feld=[], zielfeld=[], taktik="random"):
         self.Position = position
@@ -13,9 +12,9 @@ class Spieler(object):
         self.Feld = feld.copy()
         self.Zielfeld = zielfeld.copy()
         self.Taktik = taktik
+
     def wurf(self):
         augen = random.randint(1,6)
-        #print(augen)
         return augen
 
     def bewegen(self, bewegen_figur, bewegen_distanz): #Bewege die Figur falls die Zielposition nicht belegt ist
@@ -46,7 +45,7 @@ class Game:
     def __init__(self, number_of_players, players, max_turns = 500):
         self.number_of_players = number_of_players
         self.players = players
-        self.current_turn =0# index of the current player
+        self.active_player =0# index of the current player
         self.max_turns = max_turns
         self.turn_counter = 0
 
@@ -58,33 +57,24 @@ class Game:
             self.players[beendetes_spiel].reset()
         self.winner=None
         self.turn_counter=0
-        self.current_turn=0
+        self.active_player=0
         
 
     def start_game(self):
         self.reset_game()
 
-        #Ein Spieldurchgang (bricht nachdem jeder Spieler 500 Züge hatte automatisch ab)
-        while self.turn_counter<500:
-            
-            #jeder Spieler macht einen zug
-            for aktiver_spieler in range(self.number_of_players):
-                self.current_turn = aktiver_spieler
-                self.play_turn(0)
-
-                # Check if player has won 
-                if self.players[aktiver_spieler].Ziel == 4:
-                    #decisions[aktiver_spieler]=decisions[aktiver_spieler]+ spielerliste[aktiver_spieler].Entscheidungen
-                    #number_of_wins[aktiver_spieler] = number_of_wins[aktiver_spieler]+1
-                    #würfe[aktiver_spieler]=würfe[aktiver_spieler]+spielerliste[aktiver_spieler].Wurfanzahl
-                    self.winner = aktiver_spieler
-                    break
-            else: # never saw an else statement after foor loop
-                # The else clause executes after the loop completes normally. 
-                # This means that the loop did not encounter a break statement.
+        # Game stops after each player made 500 turns or there is a winner
+        while self.turn_counter<500 and self.winner is None:
+            self.play_turn(0)
+            if self.players[self.active_player].Ziel == 4:
+                #decisions[aktiver_spieler]=decisions[aktiver_spieler]+ spielerliste[aktiver_spieler].Entscheidungen
+                #number_of_wins[aktiver_spieler] = number_of_wins[aktiver_spieler]+1
+                #würfe[aktiver_spieler]=würfe[aktiver_spieler]+spielerliste[aktiver_spieler].Wurfanzahl
+                self.winner = self.active_player
+            self.active_player = (self.active_player + 1) % self.number_of_players
+            if self.active_player == 0:
                 self.turn_counter += 1
-                continue # jump to start of the while loop 
-            break
+
     
     def get_winner(self):
         return self.winner
@@ -110,7 +100,7 @@ class Game:
         if attempt>2:
             return
         #Variablen
-        player=self.players[self.current_turn]
+        player=self.players[self.active_player]
         #Die gewüfelte Zahl
         dice_roll = player.wurf()
         player.Wurfanzahl = player.Wurfanzahl +1
@@ -124,13 +114,13 @@ class Game:
                     player.Haus=player.Haus-1
                     self.play_turn(attempt)
                 else:
-                    ausgewählte_figur = figurauswahl(self.players, self.current_turn, dice_roll)
+                    ausgewählte_figur = self.select_piece_to_move(dice_roll)
                     if ausgewählte_figur<len(player.Feld):
                         schlagen(player.Feld[ausgewählte_figur]+dice_roll,self.players)
                         player.bewegen(ausgewählte_figur, dice_roll)
                     self.play_turn(attempt)
             else:
-                ausgewählte_figur = figurauswahl(self.players, self.current_turn, dice_roll)
+                ausgewählte_figur = self.select_piece_to_move(dice_roll)
                 if ausgewählte_figur<len(player.Feld):
                     schlagen(player.Feld[ausgewählte_figur]+dice_roll,self.players)
                     player.bewegen(ausgewählte_figur, dice_roll)
@@ -138,7 +128,7 @@ class Game:
 
                 
         elif len(player.Feld)>0:   #die erste Figur auf dem Feld weiterbewegen (es wurde keine 6 gewürfelt) 
-            ausgewählte_figur = figurauswahl(self.players, self.current_turn, dice_roll)
+            ausgewählte_figur = self.select_piece_to_move(dice_roll)
             if ausgewählte_figur<len(player.Feld):
                 schlagen(player.Feld[ausgewählte_figur]+dice_roll,self.players)
                 player.bewegen(ausgewählte_figur, dice_roll)
@@ -148,64 +138,59 @@ class Game:
         else:
             return
 
-    def check_winner(self):
-        pass
-    def end_game(self):
-        pass
-
-def figurauswahl(f_spielerliste, f_spieler, f_distanz):
-    ego = f_spielerliste[f_spieler]
-    möglichkeiten=list(range(len(ego.Feld)))
-    
-    #figuren aus der die nicht bewegt werden können aus der Liste streichen
-    for fiterator in möglichkeiten:
-        if ego.Feld[fiterator]+f_distanz in ego.Feld:
-            möglichkeiten.remove(fiterator)
-        if ego.Feld[fiterator]+f_distanz in ego.Zielfeld:
-            möglichkeiten.remove(fiterator)
-        if ego.Feld[fiterator]+f_distanz > ego.Start +43:
-            möglichkeiten.remove(fiterator)
-    #kann keine Figur bewegt werden wird der Wert 9 zurückgegeben
-    if len(möglichkeiten)==0:
-        return 9
-    #wenn nur eine Figur 
-    elif len(möglichkeiten)==1:
-        return möglichkeiten[0]
-    else:
-        #Figur auf Startfeld bewegen
-        for fiterator2 in möglichkeiten:
-            if ego.Feld[fiterator2]==ego.Start:
-                return fiterator2
-        #Figur die Schlagen kann bewegen
-        for fiterator3 in möglichkeiten:
-            if ego.Feld[fiterator3]+f_distanz<ego.Start+40:
-                for fui in f_spielerliste:
-                    skaliertes_Feld=fui.Feld.copy()
-                    skaliertes_Feld= [k%40 for k in skaliertes_Feld]
-                    if (ego.Feld[fiterator3]+f_distanz)%40 in skaliertes_Feld:
-                        return fiterator3
-        ego.Entscheidungen=ego.Entscheidungen +1
-        #taktik mit der weitesten Figur laufen
-        if ego.Taktik=="first":
-            firsttemp=möglichkeiten[0] 
-            firstvalue=ego.Feld[möglichkeiten[0]]
-            for fiterator4 in möglichkeiten: #alle möglichkeiten durchgehen
-                if ego.Feld[fiterator4]>firstvalue:
-                    firstvalue=ego.Feld[fiterator4]
-                    firsttemp=fiterator4
-            return firsttemp
-        #taktik mit der langsamsten Figur laufen
-        if ego.Taktik=="last":
-            firsttemp=möglichkeiten[0] 
-            firstvalue=ego.Feld[möglichkeiten[0]]
-            for fiterator4 in möglichkeiten: #alle möglichkeiten durchgehen
-                if ego.Feld[fiterator4]<firstvalue:
-                    firstvalue=ego.Feld[fiterator4]
-                    firsttemp=fiterator4
-            return firsttemp 
-     
-        #Zufällige Figurauswahl falls keine Taktik ausgewählt wurde
-        return möglichkeiten[random.randint(0,len(möglichkeiten)-1)]
+    def select_piece_to_move(self, dice_roll):
+        player=self.players[self.active_player]
+        möglichkeiten=list(range(len(player.Feld)))
+        
+        #figuren aus der die nicht bewegt werden können aus der Liste streichen
+        for fiterator in möglichkeiten:
+            if player.Feld[fiterator]+dice_roll in player.Feld:
+                möglichkeiten.remove(fiterator)
+            if player.Feld[fiterator]+dice_roll in player.Zielfeld:
+                möglichkeiten.remove(fiterator)
+            if player.Feld[fiterator]+dice_roll > player.Start +43:
+                möglichkeiten.remove(fiterator)
+        #kann keine Figur bewegt werden wird der Wert 9 zurückgegeben
+        if len(möglichkeiten)==0:
+            return 9
+        #wenn nur eine Figur 
+        elif len(möglichkeiten)==1:
+            return möglichkeiten[0]
+        else:
+            #Figur auf Startfeld bewegen
+            for fiterator2 in möglichkeiten:
+                if player.Feld[fiterator2]==player.Start:
+                    return fiterator2
+            #Figur die Schlagen kann bewegen
+            for fiterator3 in möglichkeiten:
+                if player.Feld[fiterator3]+dice_roll<player.Start+40:
+                    for fui in self.players:
+                        skaliertes_Feld=fui.Feld.copy()
+                        skaliertes_Feld= [k%40 for k in skaliertes_Feld]
+                        if (player.Feld[fiterator3]+dice_roll)%40 in skaliertes_Feld:
+                            return fiterator3
+            player.Entscheidungen=player.Entscheidungen +1
+            #taktik mit der weitesten Figur laufen
+            if player.Taktik=="first":
+                firsttemp=möglichkeiten[0] 
+                firstvalue=player.Feld[möglichkeiten[0]]
+                for fiterator4 in möglichkeiten: #alle möglichkeiten durchgehen
+                    if player.Feld[fiterator4]>firstvalue:
+                        firstvalue=player.Feld[fiterator4]
+                        firsttemp=fiterator4
+                return firsttemp
+            #taktik mit der langsamsten Figur laufen
+            if player.Taktik=="last":
+                firsttemp=möglichkeiten[0] 
+                firstvalue=player.Feld[möglichkeiten[0]]
+                for fiterator4 in möglichkeiten: #alle möglichkeiten durchgehen
+                    if player.Feld[fiterator4]<firstvalue:
+                        firstvalue=player.Feld[fiterator4]
+                        firsttemp=fiterator4
+                return firsttemp 
+        
+            #Zufällige Figurauswahl falls keine Taktik ausgewählt wurde
+            return möglichkeiten[random.randint(0,len(möglichkeiten)-1)]
 
 def schlagen(schlagen_position, schlagen_spielerliste):
     for schlagen_spieler in schlagen_spielerliste:
