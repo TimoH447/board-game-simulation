@@ -33,7 +33,7 @@ Examples:
 ## Refactoring
 
 This was an old project of mine, probably from around 2019. Nowadays although still far from writing clean code, 
-I see that there was alot to improve.
+I see that there was alot to improve. Here is the old code: https://github.com/TimoH447/board-game-simulation/commit/1ebb97710ba137d5a12c3884b8fded61ac36c4eb .
 
 Some examples:
 
